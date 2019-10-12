@@ -58,6 +58,11 @@ class WSZookeeperClientImpl(config: Config)   {
     JsonSerDes.deserialize(data.getBytes, classOf[Broker])
   }
 
+  def registerSelf(): Unit = {
+    val broker = Broker(config.brokerId, config.hostName, config.port)
+    registerBroker(broker)
+  }
+
   @VisibleForTesting
   def registerBroker(broker: Broker) = {
     val brokerData = JsonSerDes.serialize(broker)
@@ -119,6 +124,11 @@ class WSZookeeperClientImpl(config: Config)   {
       val data:String = zkClient.readData(getBrokerPath(brokerId.toInt))
       JsonSerDes.deserialize(data.getBytes, classOf[Broker])
     }).toSet
+  }
+
+  def getPartitionAssignmentsFor(topicName: String): List[PartitionReplicas] = {
+    val partitionAssignments:String = zkClient.readData(getTopicPath(topicName))
+    JsonSerDes.deserialize[List[PartitionReplicas]](partitionAssignments.getBytes, new TypeReference[List[PartitionReplicas]](){})
   }
 }
 
